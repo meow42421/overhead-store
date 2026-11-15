@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OVERHEAD: Procedural Ceilings for Blender</title>
+<meta name="description" content="OVERHEAD fills any ceiling in Blender with ducts, pipes, cable trays, lights and structure in one click.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&family=Inter+Tight:wght@700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="brand.css">
+<style>
+  body { padding: 8px; }
+  .tile { border-radius: 18px; margin-top: 8px; padding: 48px 40px; }
+  h2 { font-size: clamp(34px, 5.6vw, 58px); }
+  .sub { margin-top: 10px; color: var(--mute); }
+
+  .hero { position: relative; height: 540px; margin-top: 0; display: grid; place-items: center; }
+  .hero .lockup { font-size: clamp(38px, 10vw, 106px); }
+  .hero .cap { position: absolute; }
+  .tl { left: 28px; top: 24px; } .tr { right: 28px; top: 24px; text-align: right; }
+  .bl { left: 28px; bottom: 24px; } .br { right: 28px; bottom: 24px; text-align: right; }
+
+  .shot { padding: 0; overflow: hidden; }
+  .shot img { width: 100%; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); padding: 0; }
+  .stats div { padding: 26px 28px; border-left: 1px solid var(--line); }
+  .stats div:first-child { border-left: 0; }
+  .stats b { display: block; font: 800 clamp(44px, 6.6vw, 72px)/1 var(--display); letter-spacing: -.045em; }
+  .stats .cap { color: var(--mute); margin-top: 8px; display: block; }
+
+  .pics { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 10px; margin-top: 28px; }
+  .pics .wide { grid-column: span 2; }
+  .pics img { width: 100%; border-radius: 10px; }
+  .pics figcaption { margin-top: 10px; color: var(--mute); }
+  .pics figcaption b { color: var(--cream); font-weight: 500; }
+
+  .flow { display: grid; grid-template-columns: 1fr 300px; gap: 40px; align-items: center; }
+  .flow h2 { font-size: clamp(38px, 6.6vw, 72px); line-height: 1.02; }
+  .flow h2 span { display: block; }
+  .flow h2 span:last-child { color: var(--orange); }
+  .flow .sub { color: #6b6762; }
+  .panel-shot img { border-radius: 8px; max-height: 620px; object-fit: cover; object-position: top; width: 100%; }
+
+  .systems { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 28px; border-top: 1px solid var(--line); }
+  .systems div { display: flex; align-items: center; gap: 14px; padding: 18px 4px; border-bottom: 1px solid var(--line); font: 700 19px/1.1 var(--display); }
+  .systems img { width: 34px; height: 34px; }
+
+  .tablebox { margin-top: 26px; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 520px; }
+  th, td { padding: 12px; text-align: center; border-top: 1px solid rgba(27,28,30,.16); }
+  thead th { border-top: 0; font: 800 20px/1 var(--display); padding-bottom: 14px; }
+  th[scope=row] { text-align: left; font-weight: 500; padding-left: 0; }
+  td i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--ink); }
+  td:last-child i { background: var(--orange); }
+  td i.no { background: rgba(27,28,30,.22); height: 2px; border-radius: 1px; vertical-align: middle; }
+  td b { font: 800 19px/1 var(--display); }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+  .closer { position: relative; height: 400px; display: grid; place-items: center; }
+  .closer .badge { width: 216px; height: 110px; }
+  .closer .cap { position: absolute; color: var(--mute); }
+
+  @media (max-width: 760px) {
+    body { padding: 5px; font-size: 16px; }
+    .tile { padding: 34px 18px; margin-top: 5px; border-radius: 14px; }
+    .hero { height: 420px; }
+    .hero .tr { display: none; }
+    .tl, .bl { left: 16px; } .tr, .br { right: 16px; } .tl, .tr { top: 16px; } .bl, .br { bottom: 16px; }
+    .stats { grid-template-columns: 1fr 1fr; padding: 0; }
+    .stats div { padding: 20px; }
+    .stats div:nth-child(3) { border-left: 0; }
+    .stats div:nth-child(n+3) { border-top: 1px solid var(--line); }
+    .pics { grid-template-columns: 1fr; }
+    .pics .wide { grid-column: auto; }
+    .flow { grid-template-columns: 1fr; }
+    .panel-shot { max-width: 270px; margin: 0 auto; }
+    .systems { grid-template-columns: 1fr 1fr; }
+    .systems div { font-size: 16px; gap: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="badge" viewBox="0 0 196 100">
+    <rect style="fill:var(--bg)" width="196" height="100" rx="18"/>
+    <g style="fill:var(--fg)">
+      <rect x="13" y="13" width="80" height="74" rx="7"/>
+      <rect x="103" y="13" width="30" height="74" rx="7"/><rect x="153" y="13" width="30" height="74" rx="7"/>
+      <rect x="120" y="37" width="46" height="26"/>
+    </g>
+    <circle style="fill:var(--bg)" cx="53" cy="50" r="18"/>
+  </symbol>
+</svg>
+
+<header class="tile hero on-orange">
+  <span class="cap tl">Procedural ceilings<br>for Blender</span>
+  <span class="cap tr">Lite / Standard / Premium</span>
+  <h1 class="lockup"><svg class="badge" aria-hidden="true"><use href="#badge"/></svg><span class="word">Overhead</span></h1>
+  <span class="cap bl">Look up.</span>
+  <span class="cap br">Blender 4.2+<br>Eevee and Cycles</span>
+</header>
+
+<div class="tile shot"><img src="img/hero.jpg" alt="An industrial ceiling made with OVERHEAD: ducts, cable ladders, pipes and their hangers"></div>
+
+<div class="tile stats on-ink">
+  <div><b>11</b><span class="cap">presets</span></div>
+  <div><b>9</b><span class="cap">systems</span></div>
+  <div><b>100+</b><span class="cap">fixtures</span></div>
+  <div><b>4</b><span class="cap">wear levels</span></div>
+</div>
+
+<section class="tile on-ink">
+  <h2>11 presets</h2>
+  <div class="pics">
+    <figure class="wide"><img src="img/preset_industrial.jpg" alt=""><figcaption class="cap"><b>Industrial</b></figcaption></figure>
+    <figure><img src="img/preset_warehouse.jpg" alt=""><figcaption class="cap"><b>Warehouse</b></figcaption></figure>
+    <figure><img src="img/preset_metal_building.jpg" alt=""><figcaption class="cap"><b>Metal Building</b></figcaption></figure>
+    <figure><img src="img/preset_pole_barn.jpg" alt=""><figcaption class="cap"><b>Pole Barn</b></figcaption></figure>
+    <figure><img src="img/preset_workshop.jpg" alt=""><figcaption class="cap"><b>Workshop</b></figcaption></figure>
+    <figure><img src="img/preset_garage.jpg" alt=""><figcaption class="cap"><b>Garage</b></figcaption></figure>
+    <figure><img src="img/preset_parking.jpg" alt=""><figcaption class="cap"><b>Parking Garage</b></figcaption></figure>
+    <figure><img src="img/preset_datacenter.jpg" alt=""><figcaption class="cap"><b>Data Center</b></figcaption></figure>
+    <figure><img src="img/preset_office.jpg" alt=""><figcaption class="cap"><b>Office</b></figcaption></figure>
+    <figure><img src="img/preset_hospital.jpg" alt=""><figcaption class="cap"><b>Hospital</b></figcaption></figure>
+    <figure><img src="img/preset_kitchen.jpg" alt=""><figcaption class="cap"><b>Commercial Kitchen</b></figcaption></figure>
+  </div>
+</section>
+
+<section class="tile on-cream flow">
+  <div>
+    <h2><span>Pick a ceiling.</span><span>Press Create.</span><span>Adjust it.</span></h2>
+    <p class="sub">Move a slider and the ceiling updates.</p>
+  </div>
+  <div class="panel-shot"><img src="img/panel.jpg" alt="The OVERHEAD panel in Blender's sidebar"></div>
+</section>
+
+<section class="tile on-ink">
+  <h2>9 systems that fit around each other</h2>
+  <div class="systems">
+    <div><img src="img/sys_structure.svg" alt="">Structure</div>
+    <div><img src="img/sys_panels.svg" alt="">Ceiling Surface</div>
+    <div><img src="img/sys_hvac.svg" alt="">HVAC</div>
+    <div><img src="img/sys_pipes.svg" alt="">Pipes</div>
+    <div><img src="img/sys_tray.svg" alt="">Cable Tray</div>
+    <div><img src="img/sys_lights.svg" alt="">Lights</div>
+    <div><img src="img/sys_sprinklers.svg" alt="">Sprinklers</div>
+    <div><img src="img/sys_details.svg" alt="">Details</div>
+    <div><img src="img/sys_cables.svg" alt="">Loose Cables</div>
+  </div>
+</section>
+
+<section class="tile on-ink">
+  <h2>4 wear levels, from new to abandoned</h2>
+  <div class="pics">
+    <figure><img src="img/wear_new.jpg" alt=""><figcaption class="cap"><b>New</b></figcaption></figure>
+    <figure><img src="img/wear_used.jpg" alt=""><figcaption class="cap"><b>Used</b></figcaption></figure>
+    <figure><img src="img/wear_old.jpg" alt=""><figcaption class="cap"><b>Old</b></figcaption></figure>
+    <figure><img src="img/wear_abandoned.jpg" alt=""><figcaption class="cap"><b>Abandoned</b></figcaption></figure>
+    <figure><img src="img/wear2_new.jpg" alt=""><figcaption class="cap"><b>Office, new</b></figcaption></figure>
+    <figure><img src="img/wear2_abandoned.jpg" alt=""><figcaption class="cap"><b>Office, abandoned</b></figcaption></figure>
+  </div>
+</section>
+
+<section class="tile on-ink">
+  <h2>Detailed enough for close-ups</h2>
+  <div class="pics">
+    <figure class="wide"><img src="img/close_industrial.jpg" alt="Close-up of an industrial ceiling"></figure>
+    <figure><img src="img/close_office.jpg" alt="Close-up of an office ceiling"></figure>
+    <figure><img src="img/close_warehouse.jpg" alt="Close-up of a warehouse ceiling"></figure>
+    <figure><img src="img/close_datacenter.jpg" alt="Close-up of a data center ceiling"></figure>
+    <figure><img src="img/close_hospital.jpg" alt="Close-up of a hospital ceiling"></figure>
+  </div>
+</section>
+
+<section class="tile on-ink">
+  <h2>Over 100 fixture models</h2>
+  <div class="pics"><figure class="wide"><img src="img/fixtures.jpg" alt="A sheet of 72 of the fixture models"></figure></div>
+</section>
+
+<section class="tile on-cream">
+  <h2>3 editions</h2>
+  <div class="tablebox">
+    <table>
+      <thead><tr><th></th><th scope="col">Lite</th><th scope="col">Standard</th><th scope="col">Premium</th></tr></thead>
+      <tbody id="ed"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer class="tile closer on-ink">
+  <span class="cap tl">Overhead</span>
+  <svg class="badge" aria-hidden="true"><use href="#badge"/></svg>
+  <span class="cap br">Procedural ceilings for Blender</span>
+</footer>
+
+<script>
+  // editions: feature, then which of Lite / Standard / Premium have it (the first row shows numbers)
+  const rows = [
+    ["Presets", 4, 11, 11],
+    ["All 9 systems, live updates", 1, 1, 1],
+    ["Fixture library", 1, 1, 1],
+    ["Make Editable Copy", 1, 1, 1],
+    ["Advanced settings and colours", 0, 1, 1],
+    ["Bridge Slopes for pitched roofs", 0, 1, 1],
+    ["Light Objects", 0, 1, 1],
+    ["Detailed materials", 0, 1, 1],
+    ["Saved Looks", 0, 1, 1],
+    ["High detail for close-ups", 0, 0, 1],
+    ["Pick exact fixture types", 0, 0, 1],
+    ["Your own models", 0, 0, 1],
+  ];
+  document.getElementById("ed").innerHTML = rows.map(([name, ...v], i) =>
+    `<tr><th scope="row">${name}</th>` + v.map(x => "<td>" + (i === 0 ? `<b>${x}</b>`
+      : x ? '<i></i><span class="vh">Yes</span>' : '<i class="no"></i><span class="vh">No</span>') + "</td>").join("") + "</tr>").join("");
+
+  // Tells a page that embeds this one how tall it is (used by embed_test.html; harmless elsewhere).
+  function report() { parent.postMessage({ overheadHeight: document.documentElement.scrollHeight }, "*"); }
+  addEventListener("load", report); addEventListener("resize", report);
+</script>
+</body>
+</html>

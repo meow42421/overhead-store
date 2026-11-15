@@ -1,0 +1,27 @@
+/* OVERHEAD brand: flat and quiet.  Three colours (ink, cream, one orange), a chunky badge mark (the
+   letters OH cut out of a rounded block), a heavy grotesque for the name
+   and a small mono for captions.  No gradients, no decoration: the renders carry the page.
+   Shared by the store page (index.html) and the gallery cards (cards.html). */
+:root {
+  --ink: #1b1c1e; --black: #0c0c0d; --cream: #f3ece4; --orange: #ff4a1c; --mute: #8d8a86; --line: #2e2f32;
+  --display: "Inter Tight", Inter, system-ui, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--black); color: var(--cream); font: 500 17px/1.5 Inter, system-ui, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+img { display: block; max-width: 100%; }
+h1, h2, h3, p, figure { margin: 0; }
+h1, h2, .word, .big { font-family: var(--display); font-weight: 800; letter-spacing: -.04em; line-height: .95; }
+.cap { font: 500 12px/1.45 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+
+/* the badge: --bg is the block, --fg the letters O and H */
+.badge { display: block; --bg: var(--ink); --fg: var(--cream); }
+.lockup { display: flex; align-items: center; gap: .2em; }
+.lockup .badge { width: 1.96em; height: 1em; flex: none; }
+.lockup .word { font-size: 1em; text-transform: uppercase; letter-spacing: -.035em; }
+
+.on-orange { background: var(--orange); color: var(--ink); }
+.on-cream { background: var(--cream); color: var(--ink); }
+.on-ink { background: var(--ink); color: var(--cream); }
+.on-ink .badge, .on-black .badge { --bg: var(--cream); --fg: var(--ink); }
